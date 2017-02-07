@@ -1,27 +1,41 @@
 #!/usr/bin/env bash
 
-if test ! -f pom.xml -o ! -d its/plugin -o ! -d its/ruling; then
-    cat << EOF
-fatal: this script assumes the following files and directories to exist:
-
-    pom.xml
-    its/plugin
-    its/ruling
-
-EOF
-    exit 1
-fi
-
 slugify() {
     echo ${1//[^a-zA-Z0-9]/-}
 }
 
+report() {
+    echo
+    echo Commands executed:
+    for cmd in "${executed[@]}"; do
+        echo "  $cmd"
+    done
+    echo
+    echo "$@"
+    echo
+    echo See logs in: $log
+    echo
+}
+
+run() {
+    executed+=("$*")
+    if ! "$@"; then
+        report "Fatal: command exited with error: $@"
+        exit 1
+    fi
+}
+
 log=/tmp/mvn-$(slugify "$0")
 
+executed=()
+
+set -e
 {
-mvn clean install \
-    && mvn clean install -f its/plugin \
-    && mvn clean install -f its/ruling \
-    && { echo; echo "Congrats, all looking good!"; echo; }
-echo The output is saved in: $log
+    run mvn clean install
+    for p in its/plugin its/ruling; do
+        test -d $p || continue
+        run mvn clean install -f $p
+    done
+
+    report "Congrats, all looking good!"
 } | tee "$log"
