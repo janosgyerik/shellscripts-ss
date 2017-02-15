@@ -29,11 +29,22 @@ log=/tmp/mvn-$(slugify "$0")
 
 executed=()
 
+extra_test_projects=()
+
+found_its_subs=no
+test -d its/plugin && { extra_test_projects+=(its/plugin); found_its_subs=yes; }
+test -d its/ruling && { extra_test_projects+=(its/ruling); found_its_subs=yes; }
+test -d its && test $found_its_subs = no && extra_test_projects+=(its)
+
+found_it_subs=no
+test -d it/plugin && { extra_test_projects+=(it/plugin); found_it_subs=yes; }
+test -d it/ruling && { extra_test_projects+=(it/ruling); found_it_subs=yes; }
+test -d it && test $found_it_subs = no && extra_test_projects+=(it)
+
 set -e
 {
     run mvn clean install
-    for p in its/plugin its/ruling; do
-        test -d $p || continue
+    for p in "${extra_test_projects[@]}"; do
         run mvn clean install -f $p
     done
 
