@@ -20,7 +20,7 @@ report() {
 run() {
     executed+=("$*")
     if ! "$@"; then
-        report "Fatal: command exited with error: $@"
+        report "FATAL: command exited with error: $@"
         exit 1
     fi
 }
